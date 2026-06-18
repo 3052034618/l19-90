@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import PageWrapper from '@/components/layout/PageWrapper'
 import NodeSelector from '@/components/briefing/NodeSelector'
 import BriefingPreview from '@/components/briefing/BriefingPreview'
@@ -9,19 +10,22 @@ import { usePropagationStore } from '@/store/propagationStore'
 import { Sparkles } from 'lucide-react'
 
 export default function BriefingPage() {
-  const { generateBriefing, briefing } = useBriefingStore()
+  const { generateBriefing, selectedNodeIds, briefing } = useBriefingStore()
   const { currentClueId } = useClueStore()
   const { getNodesByClueId } = usePropagationStore()
 
+  const nodes = currentClueId ? getNodesByClueId(currentClueId) : []
+
+  useEffect(() => {
+    if (!currentClueId) return
+    if (selectedNodeIds.length === 0) return
+    if (briefing && briefing.selectedNodeIds.length === selectedNodeIds.length &&
+        briefing.selectedNodeIds.every((id) => selectedNodeIds.includes(id))) return
+    generateBriefing(currentClueId, nodes)
+  }, [selectedNodeIds, currentClueId, nodes, briefing, generateBriefing])
+
   const handleGenerate = () => {
     if (!currentClueId) return
-    const nodes = getNodesByClueId(currentClueId).map((n) => ({
-      id: n.id,
-      nodeType: n.nodeType,
-      authorName: n.authorName,
-      sentiment: n.sentiment,
-      publishedAt: n.publishedAt,
-    }))
     generateBriefing(currentClueId, nodes)
   }
 
@@ -34,7 +38,7 @@ export default function BriefingPage() {
             <Button
               className="w-full"
               onClick={handleGenerate}
-              disabled={!currentClueId}
+              disabled={!currentClueId || selectedNodeIds.length === 0}
             >
               <Sparkles size={16} />
               {briefing ? '重新生成简报' : '生成简报'}

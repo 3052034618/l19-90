@@ -1,7 +1,8 @@
-import { Clock, MapPin } from 'lucide-react'
+import { Clock, MapPin, Image } from 'lucide-react'
 import { useClueStore } from '@/store/clueStore'
 import Card from '@/components/ui/Card'
 import Badge from '@/components/ui/Badge'
+import { cn } from '@/lib/utils'
 import type { Priority, ClueStatus } from '@/types'
 
 const priorityBadge: Record<Priority, { variant: 'red' | 'orange' | 'yellow' | 'blue'; label: string }> = {
@@ -40,7 +41,7 @@ export default function HistoryList() {
             <Card
               key={clue.id}
               hover
-              className={cn_static(
+              className={cn(
                 'cursor-pointer transition-all',
                 currentClueId === clue.id && 'border-[#00E5C7]/40 bg-[#0D1520]'
               )}
@@ -60,8 +61,16 @@ export default function HistoryList() {
                   {clue.location}
                 </div>
               )}
-              <div className="mt-2 flex items-center justify-between">
-                <Badge variant={sBadge.variant}>{sBadge.label}</Badge>
+              <div className="mt-2 flex items-center justify-between gap-2 flex-wrap">
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <Badge variant={sBadge.variant}>{sBadge.label}</Badge>
+                  {clue.screenshots.length > 0 && (
+                    <span className="inline-flex items-center gap-0.5 rounded-full border border-[#3498DB]/30 bg-[#3498DB]/15 px-2 py-0.5 text-[10px] font-medium text-[#3498DB]">
+                      <Image size={10} />
+                      {clue.screenshots.length}
+                    </span>
+                  )}
+                </div>
                 <span className="flex items-center gap-1 text-[10px] text-[#4A5A6A]">
                   <Clock size={10} />
                   {timeAgo(clue.createdAt)}
@@ -73,8 +82,4 @@ export default function HistoryList() {
       </div>
     </div>
   )
-}
-
-function cn_static(...inputs: (string | undefined | false)[]) {
-  return inputs.filter(Boolean).join(' ')
 }

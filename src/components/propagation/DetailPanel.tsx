@@ -103,6 +103,27 @@ export default function DetailPanel() {
           </div>
         </div>
 
+        {node.originalLink && (
+          <div>
+            <h4 className="text-xs font-medium text-[#4A5A6A] mb-2">原始来源（首批链接）</h4>
+            <div className="rounded-lg border border-[#1E2D3D] bg-[#0D1520] px-3 py-2 text-sm">
+              <div className="flex items-center gap-2 mb-1">
+                <ExternalLink size={12} className="text-[#3498DB]" />
+                <span className="text-[#3498DB] font-medium">{node.originalLink.platform}</span>
+                <span className="text-[#4A5A6A] text-xs">· {node.originalLink.domain}</span>
+              </div>
+              <a
+                href={node.originalLink.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs text-[#8B9DAF] hover:text-[#00E5C7] transition-colors break-all"
+              >
+                {node.originalLink.url}
+              </a>
+            </div>
+          </div>
+        )}
+
         {adjacentNodes.length > 0 && (
           <div>
             <h4 className="text-xs font-medium text-[#4A5A6A] mb-2">相邻传播来源</h4>
@@ -111,6 +132,9 @@ export default function DetailPanel() {
                 <div
                   key={adj.id}
                   className="flex items-center gap-2 rounded-lg border border-[#1E2D3D] bg-[#0D1520] px-3 py-2 text-sm cursor-pointer hover:border-[#00E5C7]/40 transition-colors"
+                  onClick={() => {
+                    usePropagationStore.getState().selectNode(adj.id)
+                  }}
                 >
                   <ExternalLink size={12} className="text-[#4A5A6A]" />
                   <span className="text-[#8B9DAF]">{adj.authorName}</span>

@@ -1,4 +1,5 @@
-import type { Clue, PropagationNode, Briefing, InteractionPoint } from '@/types'
+import type { Clue, PropagationNode, Briefing, InteractionPoint, OriginalLink } from '@/types'
+import { parseLink } from '@/utils/helpers'
 
 const now = new Date()
 const h = (hours: number) => new Date(now.getTime() - hours * 3600000).toISOString()
@@ -73,6 +74,7 @@ export const mockPropagationNodes: PropagationNode[] = [
     sentiment: 'neutral',
     adjacentSources: [],
     interactionHistory: makeInteractions(234, 89, 156),
+    originalLink: parseLink('https://weibo.com/example/post1') || undefined,
   },
   {
     id: 'node-002',
@@ -89,6 +91,7 @@ export const mockPropagationNodes: PropagationNode[] = [
     sentiment: 'negative',
     adjacentSources: ['node-001'],
     interactionHistory: makeInteractions(5621, 3420, 8932),
+    originalLink: parseLink('https://www.toutiao.com/article/7382910') || undefined,
   },
   {
     id: 'node-003',
@@ -197,6 +200,9 @@ export const mockBriefing: Briefing = {
   suggestedTargets: ['社会评论员王磊', '现代快报', '南京发布评论区舆情'],
   generatedAt: m(15),
   selectedNodeIds: ['node-001', 'node-002', 'node-005'],
+  publicResponse: '【情况通报】关于今日网传"江宁区化工厂泄漏"一事，经初步核实，相关部门已第一时间到达现场处置，暂无人员伤亡报告。有关处置进展我们会第一时间通过官方渠道发布，请以官方发布信息为准。感谢社会各界的关心和监督。',
+  internalConcerns: '1. 信息披露时效性与实际处置节奏的匹配度；2. 环评历史资料的完整性与可追溯性；3. 评论区集中质疑点的梳理与回应准备；4. 后续是否可能出现次生舆情（环保部门、安监部门问责）。',
+  verificationList: '1. 核查涉事企业近一年的环评报告和安全检查记录；2. 调取事件发生前后两小时内的监控录像；3. 走访3公里范围内居民，核实疏散通知发放时间和方式；4. 联系首发信息发布者，确认信息来源；5. 核实空气质量实时监测数据。',
 }
 
 export const sentimentTimeline = [

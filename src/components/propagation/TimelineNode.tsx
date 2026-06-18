@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion'
-import { Heart, MessageCircle, Share2 } from 'lucide-react'
+import { Heart, MessageCircle, Share2, Link } from 'lucide-react'
 import { usePropagationStore } from '@/store/propagationStore'
 import Badge from '@/components/ui/Badge'
 import type { PropagationNode, NodeType, AuthorType, Sentiment } from '@/types'
@@ -91,6 +91,12 @@ export default function TimelineNode({ node, index }: { node: PropagationNode; i
             <span className="flex items-center gap-1"><Heart size={12} />{formatNum(node.likes)}</span>
             <span className="flex items-center gap-1"><MessageCircle size={12} />{formatNum(node.comments)}</span>
             <span className="flex items-center gap-1"><Share2 size={12} />{formatNum(node.shares)}</span>
+            {node.originalLink && (
+              <span className="flex items-center gap-1 text-[#3498DB]" title={`原始来源：${node.originalLink.domain}`}>
+                <Link size={12} />
+                {node.originalLink.platform}
+              </span>
+            )}
             <span className="ml-auto text-[10px]">{node.platform}</span>
           </div>
         </div>

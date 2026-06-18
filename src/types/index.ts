@@ -24,6 +24,13 @@ export interface InteractionPoint {
   shares: number
 }
 
+export interface OriginalLink {
+  url: string
+  domain: string
+  platform: string
+  matchedNodeId?: string
+}
+
 export interface PropagationNode {
   id: string
   clueId: string
@@ -39,6 +46,7 @@ export interface PropagationNode {
   sentiment: Sentiment
   adjacentSources: string[]
   interactionHistory: InteractionPoint[]
+  originalLink?: OriginalLink
 }
 
 export interface Briefing {
@@ -50,4 +58,7 @@ export interface Briefing {
   suggestedTargets: string[]
   generatedAt: string
   selectedNodeIds: string[]
+  publicResponse: string
+  internalConcerns: string
+  verificationList: string
 }

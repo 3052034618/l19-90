@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import type { PropagationNode, InteractionPoint, Clue } from '@/types'
 import { mockPropagationNodes } from '@/data/mockData'
+import { parseLink } from '@/utils/helpers'
 
 function makeInteractions(baseLikes: number, baseComments: number, baseShares: number, baseTime: string): InteractionPoint[] {
   const base = new Date(baseTime).getTime()
@@ -85,6 +86,10 @@ export function generateNodesForClue(clue: Clue): PropagationNode[] {
   const baseTime = new Date(clue.createdAt).getTime()
   let cursor = baseTime
 
+  const originalLinks = (clue.links || [])
+    .map((url) => parseLink(url))
+    .filter(Boolean) as NonNullable<ReturnType<typeof parseLink>>[]
+
   const push = (
     nodeType: PropagationNode['nodeType'],
     authorList: { name: string; type: PropagationNode['authorType'] }[],
@@ -94,13 +99,28 @@ export function generateNodesForClue(clue: Clue): PropagationNode[] {
     shares: number,
     sentiment: PropagationNode['sentiment'],
     adjIdx: number[] = [],
-    offset: number
+    offset: number,
+    preferOriginalLink = false
   ) => {
     cursor = cursor + offset
     const a = pick(authorList, nodes.length)
     const tpl = pick(templateList, nodes.length)
-    const platform = pick(platforms, nodes.length)
+    let platform = pick(platforms, nodes.length)
     const id = `${clue.id}-node-${nodes.length + 1}`
+
+    let originalLink = undefined
+    if (preferOriginalLink && originalLinks.length > 0) {
+      const idx = nodeType === 'earliest' ? 0 : 1
+      originalLink = originalLinks[idx % originalLinks.length]
+      if (originalLink) {
+        platform = originalLink.platform
+        originalLink = { ...originalLink, matchedNodeId: id }
+      }
+    } else if (originalLinks.length > nodes.length && !preferOriginalLink) {
+      originalLink = { ...originalLinks[nodes.length % originalLinks.length], matchedNodeId: id }
+      platform = originalLink.platform
+    }
+
     nodes.push({
       id,
       clueId: clue.id,
@@ -116,11 +136,12 @@ export function generateNodesForClue(clue: Clue): PropagationNode[] {
       sentiment,
       adjacentSources: adjIdx.map((i) => nodes[i]?.id || '').filter(Boolean),
       interactionHistory: makeInteractions(likes, comments, shares, new Date(cursor).toISOString()),
+      originalLink,
     })
   }
 
-  push('earliest', authors.earliest, templates.earliest, 200, 80, 120, 'neutral', [], 60000)
-  push('amplifier', authors.amplifier, templates.amplifier, 5800, 3200, 8500, 'negative', [0], 900000)
+  push('earliest', authors.earliest, templates.earliest, 200, 80, 120, 'neutral', [], 60000, true)
+  push('amplifier', authors.amplifier, templates.amplifier, 5800, 3200, 8500, 'negative', [0], 900000, true)
   push('normal', authors.normal, templates.normal, 1200, 680, 540, 'negative', [1], 1800000)
   push('normal', authors.government, templates.government, 11000, 7800, 14000, 'neutral', [1, 2], 1200000)
   push('sentiment_turn', authors.sentiment_turn, templates.sentiment_turn, 24000, 16500, 9200, 'negative', [3], 1500000)

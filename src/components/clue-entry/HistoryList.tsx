@@ -1,7 +1,8 @@
-import { Clock, MapPin, Image } from 'lucide-react'
+import { Clock, MapPin, Image, X, Eye } from 'lucide-react'
 import { useClueStore } from '@/store/clueStore'
 import Card from '@/components/ui/Card'
 import Badge from '@/components/ui/Badge'
+import Drawer from '@/components/ui/Drawer'
 import { cn } from '@/lib/utils'
 import type { Priority, ClueStatus } from '@/types'
 
@@ -28,7 +29,15 @@ function timeAgo(dateStr: string): string {
 }
 
 export default function HistoryList() {
-  const { clues, currentClueId, setCurrentClue } = useClueStore()
+  const { clues, currentClueId, setCurrentClue, previewClueId, isPreviewOpen, openPreview, closePreview, getClueById } = useClueStore()
+  const previewClue = previewClueId ? getClueById(previewClueId) : undefined
+
+  const handleClueClick = (clueId: string, hasScreenshots: boolean) => {
+    setCurrentClue(clueId)
+    if (hasScreenshots) {
+      openPreview(clueId)
+    }
+  }
 
   return (
     <div className="space-y-3">
@@ -45,7 +54,7 @@ export default function HistoryList() {
                 'cursor-pointer transition-all',
                 currentClueId === clue.id && 'border-[#00E5C7]/40 bg-[#0D1520]'
               )}
-              onClick={() => setCurrentClue(clue.id)}
+              onClick={() => handleClueClick(clue.id, clue.screenshots.length > 0)}
             >
               <div className="flex items-start justify-between gap-2">
                 <span className="text-sm font-medium text-white line-clamp-1">
@@ -65,7 +74,13 @@ export default function HistoryList() {
                 <div className="flex items-center gap-1.5 flex-wrap">
                   <Badge variant={sBadge.variant}>{sBadge.label}</Badge>
                   {clue.screenshots.length > 0 && (
-                    <span className="inline-flex items-center gap-0.5 rounded-full border border-[#3498DB]/30 bg-[#3498DB]/15 px-2 py-0.5 text-[10px] font-medium text-[#3498DB]">
+                    <span
+                      className="inline-flex items-center gap-0.5 rounded-full border border-[#3498DB]/30 bg-[#3498DB]/15 px-2 py-0.5 text-[10px] font-medium text-[#3498DB] hover:bg-[#3498DB]/25 transition-colors"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        openPreview(clue.id)
+                      }}
+                    >
                       <Image size={10} />
                       {clue.screenshots.length}
                     </span>
@@ -80,6 +95,82 @@ export default function HistoryList() {
           )
         })}
       </div>
+
+      {previewClue && (
+        <Drawer open={isPreviewOpen} onClose={closePreview} title="线索截图预览" width="w-[520px]">
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-base font-semibold text-white">{previewClue.keywords.join('、')}</h3>
+                {previewClue.location && (
+                  <p className="text-xs text-[#8B9DAF] mt-0.5 flex items-center gap-1">
+                    <MapPin size={10} /> {previewClue.location}
+                  </p>
+                )}
+              </div>
+              <Badge variant={priorityBadge[previewClue.priority].variant}>
+                {priorityBadge[previewClue.priority].label}
+              </Badge>
+            </div>
+
+            <div className="rounded-lg border border-[#1E2D3D] bg-[#0D1520] p-3">
+              <div className="flex items-center justify-between mb-2">
+                <h4 className="text-xs font-medium text-[#8B9DAF] flex items-center gap-1">
+                  <Image size={12} className="text-[#3498DB]" />
+                  已上传 {previewClue.screenshots.length} 张截图
+                </h4>
+                <span className="text-[10px] text-[#4A5A6A]">
+                  上传时间：{new Date(previewClue.createdAt).toLocaleString('zh-CN')}
+                </span>
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                {previewClue.screenshots.map((src, idx) => (
+                  <div key={idx} className="group relative aspect-square rounded-lg overflow-hidden border border-[#1E2D3D] bg-[#0A121C]">
+                    <img
+                      src={src}
+                      alt={`截图 ${idx + 1}`}
+                      className="w-full h-full object-cover cursor-pointer hover:opacity-80 transition-opacity"
+                      onClick={() => window.open(src, '_blank')}
+                    />
+                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
+                      <Eye size={20} className="text-white" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {previewClue.links.length > 0 && (
+              <div>
+                <h4 className="text-xs font-medium text-[#4A5A6A] mb-2">首批链接</h4>
+                <div className="space-y-2">
+                  {previewClue.links.map((link, idx) => (
+                    <a
+                      key={idx}
+                      href={link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block rounded-lg border border-[#1E2D3D] bg-[#0D1520] px-3 py-2 text-xs text-[#8B9DAF] hover:text-[#00E5C7] hover:border-[#00E5C7]/40 transition-colors break-all"
+                    >
+                      {link}
+                    </a>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-[#4A5A6A]">
+                <Clock size={10} className="inline mr-1" />
+                创建于 {new Date(previewClue.createdAt).toLocaleString('zh-CN')}
+              </span>
+              <Badge variant={statusBadge[previewClue.status].variant}>
+                {statusBadge[previewClue.status].label}
+              </Badge>
+            </div>
+          </div>
+        </Drawer>
+      )}
     </div>
   )
 }
